@@ -1,9 +1,8 @@
 {
     "name": "creatuity/magento-2-cors-requests",
     "description": "Enabling cross-origin resource sharing (CORS) requests to Magento 2 API from configured Origin domain",
-    "homepage": "https://github.com/creatuity/magento-2-cors-requests",
+    "homepage": "https://github.com/SISL-source/magento2-cors-requests",
     "type": "magento2-module",
-    "version": "1.0.0",
     "license": [
         "OSL-3.0",
         "AFL-3.0"
@@ -13,8 +12,8 @@
         "source": "https://github.com/creatuity/magento-2-cors-requests"
     },
     "require": {
-        "php": "^8.1",
-        "magento/framework": "*"
+        "php": "~8.1.0 || ~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
+        "magento/framework": ">=103.0.4 <104"
     },
     "autoload": {
         "files": [

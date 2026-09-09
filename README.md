@@ -1,66 +1,55 @@
-# Magento 2 CORS Cross-Domain Requests
+# Magento 2 CORS Requests — utrzymywany fork (SISL)
 
-Forked from **splashlab/magento-2-cors-requests**:
-https://github.com/splashlab/magento-2-cors-requests
+Włącza obsługę **CORS (Cross-Origin Resource Sharing)** dla API Magento 2 (REST / webapi),
+żeby aplikacja headless / PWA / zewnętrzny front z innej domeny mógł wołać API sklepu
+prosto z przeglądarki. Moduł dokłada nagłówki `Access-Control-Allow-Origin`,
+`Access-Control-Allow-Credentials`, `Access-Control-Max-Age` (oraz `AMP-Access-Control-Allow-Source-Origin`)
+i obsługuje żądania preflight `OPTIONS`.
 
-This module allows you to enable Cross-Origin Resource Sharing (CORS) REST API requests in Magento 2 by adding the appropriate HTTP headers and handling the pre-flight OPTIONS requests.
+To **utrzymywany fork** porzuconego `creatuity/magento-2-cors-requests` (ostatni commit
+upstream: 2023). Oryginał deklaruje `magento/framework: *` i `php: ^8.1` — wchodzi „po cichu",
+ale nie był testowany ani wspierany pod Magento **2.4.9 / PHP 8.4**. Ten fork jest zweryfikowany
+na 2.4.9: `setup:di:compile` przechodzi, a nagłówki CORS potwierdzone realnym żądaniem do żywego
+REST API.
 
-This can be used to allow AJAX and other requests to the Magento 2 REST API from another domain (or subdomain). 
+## Zgodność
+- Magento **2.4.4 – 2.4.9** (Open Source / Adobe Commerce)
+- PHP **8.1 – 8.4**
+- `magento/framework >=103.0.4 <104`
 
-## How to install
+## Instalacja
 
-### 1. via composer
+Paczka o tej samej nazwie istnieje też na Packagist, ale wskazuje na porzucony oryginał —
+dlatego najpierw dodaj to repozytorium jako źródło VCS, a potem instaluj gałąź `dev-main`:
 
-Edit `composer.json`
-
-```
-{
-    "repositories": [
-        {
-            "type": "vcs",
-            "url": "https://github.com/creatuity/magento-2-cors-requests.git"
-        }
-    ],
-    "require": {
-        "creatuity/magento-2-cors-requests": "dev-master"
-    }
-}
-```
-
-```
-composer install
-php bin/magento setup:upgrade
-php bin/magento setup:static-content:deploy
+```bash
+composer config repositories.sisl-cors vcs https://github.com/SISL-source/magento2-cors-requests
+composer require creatuity/magento-2-cors-requests:dev-main
+bin/magento module:enable Creatuity_CorsRequests
+bin/magento setup:upgrade
+bin/magento setup:di:compile   # tryb produkcyjny
 ```
 
-### 2. Copy and paste
+## Konfiguracja
 
-Download latest version from GitHub
+**Sklep → Konfiguracja → Ogólne → Web → CORS Requests Configuration:**
 
-Paste into `app/code/Creatuity/CorsRequests` directory
+| Pole | Opis |
+|------|------|
+| **CORS Origin Url** | `*` albo pełny URL bez końcowego `/` (np. `https://headless.twojsklep.pl`). Ustawiana wartość trafia do nagłówka `Access-Control-Allow-Origin`. |
+| **CORS Allow Credentials** | `Yes` → dokłada `Access-Control-Allow-Credentials: true` (ciasteczka między domenami). |
+| **CORS Requests for AMP** | `Yes` → dokłada `AMP-Access-Control-Allow-Source-Origin`. |
+| **CORS Request Max Age** | Liczba sekund do nagłówka `Access-Control-Max-Age` (cache preflightu). |
 
-```
-php bin/magento setup:upgrade
-php bin/magento setup:static-content:deploy
-```
+Po zmianie konfiguracji wyczyść cache (`bin/magento cache:flush`).
 
-### 3. Update Origin URL
+> **Bezpieczeństwo:** `*` przy jednoczesnym `Allow Credentials` jest odrzucane przez przeglądarki
+> i ryzykowne — do produkcji podawaj konkretny origin, nie gwiazdkę.
 
-In `Stores -> Configuration`, go to `General -> Web -> CORS Requests Configuration`.
+## Jak to działa
+- `Creatuity\CorsRequests\Plugin\CorsHeadersPlugin` — `beforeDispatch` na `Magento\Webapi\Controller\Rest`, dokłada nagłówki na podstawie konfiguracji.
+- `CorsRequestOptionsPlugin` — przepuszcza metodę `OPTIONS` (preflight jQuery/fetch).
+- `CorsRequestMatchPlugin` — dla preflightu `OPTIONS` zwraca zastępczą trasę zamiast błędu 404/„request method invalid".
 
-Then edit the `CORS Origin Url` field to the domain you want to enable cross-domain requests from. (i.e. http://example.com)
-
-## How does it work?
-
-The full implementation of CORS cross-domain HTTP requests is outside the scope of this README, but this is what this module does:
-
-1. Allows configuring an Origin Url in the Admin Configuration area - this is the domain which cross-domain requests are permitted from
-2. This domain is added to a `Access-Control-Allow-Origin` response HTTP header
-3. Optionally you can enable the `Access-Control-Allow-Credentials` header as well, to enable passing cookies
-
-For non-GET and non-standard-POST requests (i.e. PUT and DELETE), the "pre-flight check" OPTIONS request is handled by:
-
-1. An empty `/V1/cors/check` API response with the appropriate headers:
-2. `Access-Control-Allow-Methods` response header, which mirrors the `Access-Control-Request-Method` request header
-3. `Access-Control-Allow-Headers` response header, which mirrors the `Access-Control-Request-Headers` request header
-
+## Licencja
+OSL-3.0 / AFL-3.0 (jak oryginał). Fork utrzymywany przez [SISL](https://sisl.pl).
