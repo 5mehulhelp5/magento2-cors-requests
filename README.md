@@ -19,12 +19,8 @@ REST API.
 
 ## Instalacja
 
-Paczka o tej samej nazwie istnieje też na Packagist, ale wskazuje na porzucony oryginał —
-dlatego najpierw dodaj to repozytorium jako źródło VCS, a potem instaluj gałąź `dev-main`:
-
 ```bash
-composer config repositories.sisl-cors vcs https://github.com/SISL-source/magento2-cors-requests
-composer require creatuity/magento-2-cors-requests:dev-main
+composer require sisl-source/magento2-cors-requests
 bin/magento module:enable Creatuity_CorsRequests
 bin/magento setup:upgrade
 bin/magento setup:di:compile   # tryb produkcyjny
